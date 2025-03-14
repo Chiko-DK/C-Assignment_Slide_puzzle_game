@@ -85,7 +85,7 @@ void PGMimage::write(const string& fileName)
         return;
     }
 
-    ofs << "P5\n#File produced by P Marais\n" << width << " " << height << endl << 255 << endl;
+    ofs << "P5\n#File produced by Chiko DK\n" << width << " " << height << endl << 255 << endl;
     ofs.write(reinterpret_cast<char*>(buffer), width * height);
     if (!ofs)
     {
