@@ -1,4 +1,5 @@
 // copyright, Patrick Marais
+// Modified by: Chiko Kasongo
 // Department of Computer Science
 // University of Cape Town
 // (c) 2025
@@ -10,6 +11,12 @@
 #include "PGMimage.h"
 
 using namespace std;
+
+PGMimage::PGMimage(int wd, int ht, int background) : width(wd), height(ht)
+{
+    buffer = new unsigned char[wd * ht];
+    for (int i = 0; i < wd * ht; ++i) buffer[i] = background;
+}
 
 void PGMimage::setImageData(unsigned char* data, int wd, int ht)
 {
@@ -93,4 +100,26 @@ void PGMimage::write(const string& fileName)
     }
 
     ofs.close();
+}
+
+    // Embed an image at a specific (x, y) position
+void PGMimage::embedImage(const PGMimage& img, int x, int y)
+{
+    if (!isValid() || !img.isValid()) {
+        cerr << "Invalid image(s) for embedding.\n";
+        return;
+    }
+    if (x + img.width > width || y + img.height > height) {
+        cerr << "Embedding image exceeds boundaries.\n";
+        return;
+    }
+
+    for (int row = 0; row < img.height; row++) {
+        for (int col = 0; col < img.width; col++) {
+            int targetIndex = (y + row) * width + (x + col);
+            int sourceIndex = row * img.width + col;
+            buffer[targetIndex] = img.buffer[sourceIndex];
+        }
+    }
+
 }

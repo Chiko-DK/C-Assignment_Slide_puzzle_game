@@ -18,6 +18,7 @@ private:
 public:
     // alway create an empty PGMimage, then call read() or setImageData() to fill it.
     PGMimage() : buffer(nullptr), width(0), height(0) {}
+    PGMimage(int wd, int ht, int background);
     ~PGMimage() { if (buffer) delete[] buffer; }
 
     // getters
@@ -30,6 +31,9 @@ public:
     {
         wd = width; ht = height;
     }
+    bool isValid() const {
+        return buffer != nullptr && width > 0 && height > 0;
+    }
 
     // set Image data from existing sized buffer (1D flattened array)
     void setImageData(unsigned char* data, int wd, int ht);
@@ -37,6 +41,7 @@ public:
     // read and write PGM images
     void read(const std::string& fileName);
     void write(const std::string& fileName);
+    void embedImage(const PGMimage& img, int x, int y);
 
     int getWidth() const { return width; }
     int getHeight() const { return height; }
