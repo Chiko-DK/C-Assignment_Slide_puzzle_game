@@ -1,9 +1,16 @@
-#include "TileManager.h"
-#include <fstream>
-#include <sstream>
-#include <cstdlib> // For rand()
-#include <ctime>
+// Author: Chiko Kasongo
+// Date: 17/03/2025
+// Purpose: To shuffle a given image into a tile puzzle and save the shuffled images
 
+#include "TileManager.h"
+#include "PGMimage.h"
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
+#include <cstring>
+
+// Tile Class Implementation
 Tile::Tile(int w, int h) : width(w), height(h) {
     data = new unsigned char[w * h];
 }
@@ -13,55 +20,44 @@ Tile::~Tile() {
 }
 
 void Tile::copyData(const unsigned char* src) {
-    for (int i = 0; i < width * height; i++) {
-        data[i] = src[i];
-    }
+    std::memcpy(data, src, width * height);
 }
 
+// TileManager Class Implementation
 TileManager::TileManager(const std::string& inputFile, int size, int moves, const std::string& outputBase)
     : gridSize(size), numMoves(moves), baseName(outputBase) {
+    
+    PGMimage image;
+    image.read(inputFile);
 
-    std::ifstream ifs(inputFile, std::ios::binary);
-    if (!ifs) {
-        std::cerr << "Error opening file: " << inputFile << std::endl;
-        exit(1);
-    }
+    int imageWidth, imageHeight;
+    image.getDims(imageWidth, imageHeight);
 
-    std::string magic;
-    ifs >> magic;
-    if (magic != "P5") {
-        std::cerr << "Invalid PGM format.\n";
-        exit(1);
-    }
+    tileWidth = imageWidth / gridSize;
+    tileHeight = imageHeight / gridSize;
 
-    int width, height, maxVal;
-    ifs >> width >> height >> maxVal;
-    ifs.ignore();
+    const unsigned char* imgBuffer = image.getBuffer();
 
-    unsigned char* imageData = new unsigned char[width * height];
-    ifs.read(reinterpret_cast<char*>(imageData), width * height);
-    ifs.close();
-
-    tileWidth = width / gridSize;
-    tileHeight = height / gridSize;
-
+    // Initialize Board
     for (int r = 0; r < gridSize; ++r) {
         std::vector<Tile*> row;
         for (int c = 0; c < gridSize; ++c) {
             Tile* tile = new Tile(tileWidth, tileHeight);
-            for (int i = 0; i < tileHeight; i++) {
-                int imgIndex = ((r * tileHeight + i) * width) + (c * tileWidth);
-                tile->copyData(imageData + imgIndex);
+            for (int y = 0; y < tileHeight; ++y) {
+                int imgIndex = ((r * tileHeight + y) * imageWidth) + (c * tileWidth);
+                std::memcpy(tile->data + (y * tileWidth), imgBuffer + imgIndex, tileWidth);
             }
             row.push_back(tile);
         }
         board.push_back(row);
     }
 
-    delete[] imageData;
-
+    // Set bottom-right tile as empty (black)
     emptyRow = gridSize - 1;
     emptyCol = gridSize - 1;
+    std::fill(board[emptyRow][emptyCol]->data, board[emptyRow][emptyCol]->data + (tileWidth * tileHeight), 0);
+
+    shuffle();
 }
 
 TileManager::~TileManager() {
@@ -90,25 +86,25 @@ void TileManager::makeRandomMove() {
 }
 
 void TileManager::saveCurrentBoard(int moveNum) const {
-    std::ostringstream fileName;
-    fileName << baseName << "-" << moveNum << ".pgm";
-
-    std::ofstream ofs(fileName.str(), std::ios::binary);
-    if (!ofs) {
-        std::cerr << "Error saving image: " << fileName.str() << std::endl;
-        return;
-    }
-
-    ofs << "P5\n" << (tileWidth * gridSize) << " " << (tileHeight * gridSize) << "\n255\n";
+    PGMimage outputImage;
+    int imgWidth = tileWidth * gridSize;
+    int imgHeight = tileHeight * gridSize;
+    unsigned char* outputBuffer = new unsigned char[imgWidth * imgHeight];
 
     for (int r = 0; r < gridSize; r++) {
-        for (int i = 0; i < tileHeight; i++) {
-            for (int c = 0; c < gridSize; c++) {
-                ofs.write(reinterpret_cast<char*>(board[r][c]->data + (i * tileWidth)), tileWidth);
+        for (int c = 0; c < gridSize; c++) {
+            for (int y = 0; y < tileHeight; y++) {
+                int destIndex = ((r * tileHeight + y) * imgWidth) + (c * tileWidth);
+                std::memcpy(outputBuffer + destIndex, board[r][c]->data + (y * tileWidth), tileWidth);
             }
         }
     }
-    ofs.close();
+
+    outputImage.setImageData(outputBuffer, imgWidth, imgHeight);
+    delete[] outputBuffer;
+
+    std::string outputFileName = baseName + "-" + std::to_string(moveNum) + ".pgm";
+    outputImage.write(outputFileName);
 }
 
 void TileManager::shuffle() {
