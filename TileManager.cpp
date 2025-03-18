@@ -19,7 +19,7 @@ Tile::~Tile() {
     delete[] data;
 }
 
-void Tile::copyData(const unsigned char* src) {
+void Tile::copyData(const unsigned char* src) { // delete
     std::memcpy(data, src, width * height);
 }
 

@@ -12,12 +12,6 @@
 
 using namespace std;
 
-PGMimage::PGMimage(int wd, int ht, int background) : width(wd), height(ht)
-{
-    buffer = new unsigned char[wd * ht];
-    for (int i = 0; i < wd * ht; ++i) buffer[i] = background;
-}
-
 void PGMimage::setImageData(unsigned char* data, int wd, int ht)
 {
     if (data == nullptr || wd < 1 || ht < 1)
@@ -66,7 +60,7 @@ void PGMimage::read(const string& fileName)
         cerr << "Max grey level incorect - found: " << maxChan << endl;
     }
     // start of binary block
-
+    delete[] buffer;
     buffer = new unsigned char[width * height];
     ifs.read(reinterpret_cast<char*>(buffer), width * height);
 

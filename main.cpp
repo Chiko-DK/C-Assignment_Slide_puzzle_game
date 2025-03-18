@@ -4,6 +4,7 @@
 #include <ctime>
 #include <iostream>
 #include <cmath>
+#include <fstream>
 
 using namespace std;
 
@@ -26,16 +27,15 @@ int main(int argc, char* argv[]) {
     TileManager manager(inputImage, gridSize, moves, outputBase);
 
     // Load images
-    vector<PGMimage> images;
+    std::vector<PGMimage> images;
     for (int i = 0; i <= moves; i++) {
         string filename = outputBase + "-" + to_string(i) + ".pgm";
         PGMimage img;
         img.read(filename);
-        if (!img.isValid()) {
-            cerr << "Error loading image: " << filename << endl;
-            return 1;
-        }
+
+        cout << filename << " : "<< img.getWidth() << "x" << img.getHeight() << endl;
         images.push_back(img);
+
     }
 
     // Calculate optimal layout (rows & cols)
@@ -46,28 +46,31 @@ int main(int argc, char* argv[]) {
     int tileWidth = images[0].getWidth();
     int tileHeight = images[0].getHeight();
 
+    //cout << "Tile width: " << tileWidth << ", Tile height: " << tileHeight << endl;
+
     // Final summary image dimensions
     int finalWidth = cols * tileWidth + (cols + 1) * margin;
     int finalHeight = rows * tileHeight + (rows + 1) * margin;
 
     // Create a white background summary image
-    PGMimage summary(finalWidth, finalHeight, 255); // 255 = white background
-    cout << "Hereeeeee!!!!!!!! " << endl;
-    summary.write(summaryImage);
+    //PGMimage summary(finalWidth, finalHeight, 255); // 255 = white background
+    //cout << "Hereeeeee!!!!!!!! " << endl;
 
     // Place images in grid
-    for (int i = 0; i < moves; i++) {
+    for (int i = 0; i <= moves; i++) {
+        if (i >= images.size()) break;
+
         int row = i / cols;
         int col = i % cols;
 
         int x = col * tileWidth + (col + 1) * margin;
         int y = row * tileHeight + (row + 1) * margin;
 
-        summary.embedImage(images[i], x, y);
+        //summary.embedImage(images[i], x, y);
     }
 
     // Save summary image
-    summary.write(summaryImage);
+    //summary.write(summaryImage);
     cout << "Summary image saved as: " << summaryImage << endl;
 
     return 0;

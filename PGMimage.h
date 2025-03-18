@@ -18,7 +18,6 @@ private:
 public:
     // alway create an empty PGMimage, then call read() or setImageData() to fill it.
     PGMimage() : buffer(nullptr), width(0), height(0) {}
-    PGMimage(int wd, int ht, int background);
     ~PGMimage() { if (buffer) delete[] buffer; }
 
     // getters
